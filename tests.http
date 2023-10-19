@@ -1,0 +1,149 @@
+GET http://localhost:5050/posts?page=1 HTTP/1.1
+
+####
+GET http://localhost:5050/posts/652821509b1f110791840648 HTTP/1.1
+
+####
+GET http://localhost:5050/users/652e88bc575f25c13455114b/posts HTTP/1.1
+
+####
+POST http://localhost:5050/posts/create HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "POST 2",
+    "category": "Categoria 2",
+    "cover": "https://static.vecteezy.com/system/resources/thumbnails/000/192/818/small/T_3-01.jpg",
+    "content": "test prova content 4",
+    "readTime": {
+        "value": 5,
+        "unit": "minuti"
+    },
+    "author": "652e88bc575f25c13455114b"
+}
+
+####
+POST http://localhost:5050/posts/create HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "POST 3",
+    "category": "Categoria 1",
+    "cover": "https://cloudinary.com/your-image-path.jpg",
+    "content": "test prova content 4",
+    "readTime": {
+        "value": 1,
+        "unit": "minuti"
+    },
+    "author": "652e46c4b5120e635f25d2f5"
+}
+
+####
+PATCH http://localhost:5050/posts/update/652fd87c8a162ce5a6bd8261 HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "POST modificato da back",
+    "category": "Categoria 1 back",
+    "cover": "https://static.vecteezy.com/system/resources/thumbnails/000/192/818/small/T_3-01.jpg",
+    "content": "test prova content MOD BACK",
+    "readTime": {
+        "value": 10,
+        "unit": "minuti"
+    }
+}
+
+####
+DELETE http://localhost:5050/posts/delete/652825a870fbd293372b9404 HTTP/1.1
+
+
+
+
+####
+GET http://localhost:5050/users HTTP/1.1
+
+####
+POST http://localhost:5050/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "mariorossi@gmail.com",
+  "password": "lamiapassword"
+}
+
+####
+POST http://localhost:5050/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "firstName": "Daniele",
+  "lastName": "Bianchi",
+  "email": "danielebianchi@gmail.com",
+  "password": "lamiapassword"
+}
+
+####
+GET http://localhost:5050/users/652e88bc575f25c13455114b HTTP/1.1
+
+####
+POST http://localhost:5050/users/create HTTP/1.1
+Content-Type: application/json
+
+{
+  "firstName": "Mario",
+  "lastName": "Rossi",
+  "email": "mariorossi@gmail.com",
+  "password": "lamiapassword"
+}
+
+####
+PATCH http://localhost:5050/users/652e88bc575f25c13455114b/update HTTP/1.1
+Content-Type: application/json
+
+{
+  "firstName": "Super Mario",
+  "lastName": "Rossi Wario",
+  "email": "mariorossi@gmail.com",
+  "password": "lamiapassword"
+}
+
+
+
+
+####
+GET http://localhost:5050/posts/652821509b1f110791840648/comments HTTP/1.1
+
+####
+GET http://localhost:5050/posts/652821509b1f110791840648/comments/65297a1ddfefdc68929f1e03 HTTP/1.1
+
+####
+POST  http://localhost:5050/posts/652821509b1f110791840648/comments/create HTTP/1.1
+Content-Type: application/json
+
+{
+  "comment": "prova commento 3",
+  "rate": 5,
+  "author": "65281f33a2a7d8d9f9e4e99f"
+}
+
+####
+PATCH   http://localhost:5050/posts/652821509b1f110791840648/comments/update/65297ef84ab55d61d6c540a8 HTTP/1.1
+Content-Type: application/json
+
+{
+  "comment": "prova commento 3 MOD",
+  "rate": 1,
+  "author": "65281f33a2a7d8d9f9e4e99f"
+}
+
+
+
+
+####
+POST http://localhost:5050/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "mariorossi@gmail.com",
+  "password": "lamiapassword"
+}

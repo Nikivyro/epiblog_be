@@ -179,114 +179,86 @@ posts.post('/posts/create', async (req, res) => {
 })
 
 // PATCH
-posts.patch('/posts/update/:postId', async (req, res) => {
-    const { postId } = req.params
-    const postExist = await PostModel.findById(postId)
-
-    if (!postExist) {
-        return res.status(404).send({
-            statusCode: 404,
-            message: "This post does not exist!"
-        })
-    }    
-
+posts.patch('/posts/update/:postId', cloudUpload.single('cover'), async (req, res) => {
     try {
-        const dataToUpdate = req.body
-        const options = {new: true}
-        const result = await PostModel.findByIdAndUpdate(postId, dataToUpdate, options)
+        const postId = req.params.postId;
+        const existingPost = await PostModel.findById(postId);
 
-        res.status(200).send({
-            statusCode: 200,
-            message: "Post edited successfully",
-            result
-        })
+        if (!existingPost) {
+            return res.status(404).json({
+                statusCode: 404,
+                message: "Post non trovato."
+            });
+        }
 
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path);
+            if (result && result.secure_url) {
+                const imageURL = result.secure_url;
+                existingPost.cover = imageURL;
+            } else {
+                return res.status(500).json({
+                    statusCode: 500,
+                    message: "Errore nell'upload dell'immagine su Cloudinary"
+                });
+            }
+        }
+
+        const dataToUpdate = req.body;
+        const options = { new: true };
+        const updatedPost = await PostModel.findByIdAndUpdate(postId, dataToUpdate, options);
+
+        res.status(200).json(updatedPost);
     } catch (error) {
-        res.status(500).send({
+        console.error(error);
+        res.status(500).json({
             statusCode: 500,
             message: "Errore interno del server"
-        })
+        });
     }
-})
+});
 
 // CLOUD COVER PATCH
-posts.post('/posts/:postId/editCoverCloud', upload.single('cover'), async (req, res) => {
+posts.post('/posts/:postId/uploadCover', cloudUpload.single('cover'), async (req, res) => {
     try {
-      const postId = req.params.postId;
-      const file = req.file;
-  
-      // Effettua l'upload del nuovo file su Cloudinary
-      const result = await cloudinary.uploader.upload(file.path);
-  
-      if (result && result.secure_url) {
-        const newCoverURL = result.secure_url;
-  
-        // Aggiorna il campo "cover" nel documento Post con la nuova URL dell'immagine
-        const updatedPost = await Post.findByIdAndUpdate(
-          postId,
-          { cover: newCoverURL },
-          { new: true } // Restituisce il documento aggiornato
-        );
-  
-        if (!updatedPost) {
-          return res.status(404).json({ message: 'Post non trovato' });
+        const postId = req.params.postId;
+        const existingPost = await PostModel.findById(postId);
+
+        if (!existingPost) {
+            return res.status(404).json({
+                statusCode: 404,
+                message: "Post non trovato."
+            });
         }
-  
-        res.status(200).json({ message: 'Copertina aggiornata con successo', post: updatedPost });
-        
-      } else {
-        res.status(500).json({ message: 'Errore nell\'upload dell\'immagine su Cloudinary' });
-      }
+
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path);
+            if (result && result.secure_url) {
+                const imageURL = result.secure_url;
+                existingPost.cover = imageURL;
+                const updatedPost = await existingPost.save();
+                return res.status(200).json(updatedPost);
+            } else {
+                return res.status(500).json({
+                    statusCode: 500,
+                    message: "Errore nell'upload dell'immagine su Cloudinary"
+                });
+            }
+        } else {
+            return res.status(400).json({
+                statusCode: 400,
+                message: "Nessun file di copertina fornito."
+            });
+        }
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Errore interno del server' });
+        console.error(error);
+        res.status(500).json({
+            statusCode: 500,
+            message: "Errore interno del server"
+        });
     }
-  });
+});
 
-
-
-// posts.patch('/posts/update/:postId', cloudUpload.single('cover'), async (req, res) => {
-//     const { postId } = req.params;
-//     const postExist = await PostModel.findById(postId);
-
-//     if (!postExist) {
-//         return res.status(404).send({
-//             statusCode: 404,
-//             message: "This post does not exist!"
-//         });
-//     }
-
-//     try {
-//         const dataToUpdate = req.body;
-//         if (req.file) {
-//             // Se è stato caricato un nuovo file di copertina, esegui l'upload su Cloudinary
-//             const result = await cloudinary.uploader.upload(req.file.path);
-//             if (result && result.secure_url) {
-//                 dataToUpdate.cover = result.secure_url;
-//             } else {
-//                 return res.status(500).send({
-//                     statusCode: 500,
-//                     message: "Errore nell'upload dell'immagine su Cloudinary"
-//                 });
-//             }
-//         }
-
-//         const options = { new: true };
-//         const result = await PostModel.findByIdAndUpdate(postId, dataToUpdate, options);
-
-//         res.status(200).send({
-//             statusCode: 200,
-//             message: "Post edited successfully",
-//             result
-//         });
-
-//     } catch (error) {
-//         res.status(500).send({
-//             statusCode: 500,
-//             message: "Errore interno del server"
-//         });
-//     }
-// });
 
 // DELETE
 posts.delete('/posts/delete/:postId', async (req, res) => {
@@ -328,7 +300,7 @@ posts.get('/posts/:postId/comments', async (req, res) =>{
     }
 
     try {
-        const result = await commentModel.find()
+        const result = await commentModel.find({ refPost: postId }).populate('author');
         res.status(200).send({
             statusCode: 200,
             message:"Comments loaded successfully",

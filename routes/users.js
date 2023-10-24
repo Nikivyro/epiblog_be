@@ -4,6 +4,47 @@ const PostModel = require('../models/post')
 const user = express.Router()
 const bcrypt = require('bcrypt')
 
+
+const multer = require('multer')
+const cloudinary = require('cloudinary').v2
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
+
+// Congif Cloaudinary
+cloudinary.config({ 
+    cloud_name: `${process.env.CLOUDINARY_CLOUD_NAME}`, 
+    api_key: `${process.env.CLOUDINARY_API_KEY}`, 
+    api_secret: `${process.env.CLOUDINARY_API_SECRET}`
+});
+
+const cloudStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'user-profile',
+        format: async (req, file) => 'png',
+        public_id: (req, file) => file.name
+    }
+})
+
+//Config Multer
+const internalStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // posizione in cui salvare i file
+        cb(null, './public')
+    },
+    filename: (req, file, cb) => {
+        // generiamo un suffisso unico per il nostro file
+        const uniqueSuffix = `${Date.now()}-${crypto.randomUUID()}`
+        // qui ci recuperiamo da tutto solo l'estensione dello stesso file
+        const fileExtension = file.originalname.split('.').pop()
+        // eseguiamo la cb con il titolo completo
+        cb(null, `${file.fieldname}-${uniqueSuffix}.${fileExtension}`)
+    }
+})
+
+const upload = multer({ storage: internalStorage })
+const cloudUpload = multer({ storage: cloudStorage })
+
+
 // GET USERS
 user.get('/users', async (req, res) => {
     try {
@@ -139,4 +180,63 @@ user.get('/users/:userId/posts', async (req,res)=>{
         });
     }
 })
+
+
+// POST AVATAR SU CLOUD
+user.post('/user/avatarUpload', cloudUpload.single('avatar'), async (req, res) => {
+    try {
+        // Effettua l'upload dell'immagine su Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path);
+
+        if (result && result.secure_url) {
+            const imageURL = result.secure_url;
+            res.status(200).json({ avatar: imageURL });
+        } else {
+            res.status(500).send({
+                statusCode: 500,
+                message: "Errore nell'upload dell'immagine su Cloudinary"
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({
+            statusCode: 500,
+            message: "Errore interno del server"
+        });
+    }
+});
+
+
+// CLOUD COVER SU PATCH POST
+user.post('/user/:userId/editAvatar', upload.single('avatar'), async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const file = req.file;
+  
+      const result = await cloudinary.uploader.upload(file.path);
+  
+      if (result && result.secure_url) {
+        const newAvatarURL = result.secure_url;
+  
+        const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { cover: newAvatarURL },
+        { new: true }
+        );
+  
+        if (!updatedUser) {
+          return res.status(404).json({ message: 'Utente non trovato' });
+        }
+  
+        res.status(200).json({ message: 'Copertina aggiornata con successo', user: updatedUser });
+        
+      } else {
+        res.status(500).json({ message: 'Errore nell\'upload dell\'immagine su Cloudinary' });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Errore interno del server' });
+    }
+});
+
 module.exports = user

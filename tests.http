@@ -111,19 +111,19 @@ Content-Type: application/json
 
 
 ####
-GET http://localhost:5050/posts/652821509b1f110791840648/comments HTTP/1.1
+GET http://localhost:5050/posts/65362f10cfdac2186ced6689/comments HTTP/1.1
 
 ####
-GET http://localhost:5050/posts/652821509b1f110791840648/comments/65297a1ddfefdc68929f1e03 HTTP/1.1
+GET http://localhost:5050/posts/65362f10cfdac2186ced6689/comments/65376a4c1ca57a9fb731da55 HTTP/1.1
 
 ####
-POST  http://localhost:5050/posts/652821509b1f110791840648/comments/create HTTP/1.1
+POST  http://localhost:5050/posts/65362f10cfdac2186ced6689/comments/create HTTP/1.1
 Content-Type: application/json
 
 {
-  "comment": "prova commento 3",
+  "comment": "prova commento 2",
   "rate": 5,
-  "author": "65281f33a2a7d8d9f9e4e99f"
+  "author": "652ff5c836048bbe0658f857"
 }
 
 ####

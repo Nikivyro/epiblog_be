@@ -11,7 +11,6 @@ const PostSchema = new mongoose.Schema({
     },
     cover: {
         type: String,
-
     },
     content:{
         type: String

@@ -8,6 +8,8 @@ const bcrypt = require('bcrypt')
 const multer = require('multer')
 const cloudinary = require('cloudinary').v2
 const { CloudinaryStorage } = require('multer-storage-cloudinary')
+require('dotenv').config()
+const crypto = require('crypto')
 
 // Congif Cloaudinary
 cloudinary.config({ 
@@ -210,29 +212,42 @@ user.post('/user/avatarUpload', cloudUpload.single('avatar'), async (req, res) =
 // CLOUD COVER SU PATCH POST
 user.post('/user/:userId/editAvatar', upload.single('avatar'), async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const userId = req.params;
       const file = req.file;
   
-      const result = await cloudinary.uploader.upload(file.path);
-  
-      if (result && result.secure_url) {
-        const newAvatarURL = result.secure_url;
-  
-        const updatedUser = await UserModel.findByIdAndUpdate(
-        userId,
-        { cover: newAvatarURL },
-        { new: true }
-        );
-  
-        if (!updatedUser) {
-          return res.status(404).json({ message: 'Utente non trovato' });
-        }
-  
-        res.status(200).json({ message: 'Copertina aggiornata con successo', user: updatedUser });
-        
-      } else {
-        res.status(500).json({ message: 'Errore nell\'upload dell\'immagine su Cloudinary' });
+      const existingUser = await UserModel.findById(userId);
+
+      if (!existingUser) {
+          return res.status(404).json({
+              statusCode: 404,
+              message: "Utente non trovato."
+          });
       }
+
+
+        if (file) {
+            console.log('Percorso del file:', file.path);
+            const result = await cloudinary.uploader.upload(file.path);
+
+            if (result && result.secure_url) {
+                const avatarURL = result.secure_url;
+                existingUser.avatar = avatarURL;
+                const updatedUser = await existingUser.save();
+                return res.status(200).json(updatedUser);
+            } else {
+                return res.status(500).json({
+                    statusCode: 500,
+                    message: "Errore nell'upload dell'immagine su Cloudinary"
+                });
+            }
+        } else {
+            return res.status(400).json({
+                statusCode: 400,
+                message: "Nessun file di avatar fornito."
+            });
+        }
+
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Errore interno del server' });

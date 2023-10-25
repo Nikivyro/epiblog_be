@@ -95,6 +95,7 @@ posts.get('/posts', async (req, res)=> {
         const posts = await PostModel.find()
             .populate('author')
             .populate('comments')
+            .sort({ createdAt: -1 })
             .limit(pageSize)
             .skip((page -1) * pageSize)
         
@@ -259,7 +260,6 @@ posts.post('/posts/:postId/uploadCover', cloudUpload.single('cover'), async (req
     }
 });
 
-
 // DELETE
 posts.delete('/posts/delete/:postId', async (req, res) => {
     const { postId } = req.params
@@ -418,6 +418,40 @@ posts.patch('/posts/:postId/comments/update/:commentId', async(req, res) => {
     }
 })
 
-// MANCA LA DELETE
+// DELETE COMMENT
+posts.delete('/posts/:postId/delete/:commentId', async (req, res) => {
+    const { postId, commentId } = req.params;
+
+    try {
+        const postExist = await PostModel.findById(postId);
+        if (!postExist) {
+            return res.status(404).send({
+                statusCode: 404,
+                message: "This post does not exist!"
+            });
+        }
+        const comment = await commentModel.findOneAndDelete({ _id: commentId, refPost: postId });
+
+        if (!comment) {
+            return res.status(404).send({
+                statusCode: 404,
+                message: "This comment does not exist for the given post."
+            });
+        }
+        
+        postExist.comments.pull(comment._id);
+        await postExist.save();
+
+        res.status(204).send({
+            statusCode: 204,
+            message: 'Comment deleted successfully'
+        }); // Ritorna una risposta vuota per indicare la cancellazione riuscita.
+    } catch (error) {
+        res.status(500).send({
+            statusCode: 500,
+            message: "Errore interno del server"
+        });
+    }
+});
 
 module.exports = posts

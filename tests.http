@@ -127,16 +127,17 @@ Content-Type: application/json
 }
 
 ####
-PATCH   http://localhost:5050/posts/652821509b1f110791840648/comments/update/65297ef84ab55d61d6c540a8 HTTP/1.1
+PATCH http://localhost:5050/posts/65362f10cfdac2186ced6689/comments/update/6537dc52a0e3035e7820705d HTTP/1.1
 Content-Type: application/json
 
 {
-  "comment": "prova commento 3 MOD",
+  "comment": "commento modificato da back",
   "rate": 1,
-  "author": "65281f33a2a7d8d9f9e4e99f"
+  "author": "6537cdd6a0e3035e78206f8d"
 }
 
-
+####
+DELETE http://localhost:5050/posts/65362f10cfdac2186ced6689/delete/6537e81ba0e3035e782070ad HTTP/1.1
 
 
 ####
